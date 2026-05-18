@@ -2,11 +2,17 @@
 
 Integrative tool to predict genetic variant-target gene links in a specific disease and cell type/tissue.
 
+NOTE: 
+- The first release is pending minor adjustment to features.
+- This repository contains as yet unpublished work.
+
 ## Description
 
 DisCO-VG (Disease-specific CMMC Optimization of Variant-Gene pairs) is a computational method to link disease-associated variants to their target genes with cell type or tissue specificity. DisCO-VG uses a novel statistical learning method called *coupled matrix-matrix completion* (CMMC) ([Bagherian et al. (2021)](10.1093/bib/bbaa025)) to generate the variant-gene linking scores. By integrating various sources of functional (epi)genomic information such as chromatin accessibility, quantitative trait loci, and gene pathway information, DisCO-VG computes a score that represents the strength of variant-gene targeting given a specific disease and cell type/tissue.
 
 The goal of this tool is to nominate variant-gene pairs in a disease-specific and cell-type-/tissue-specific manner that can be further validated with experimental approaches. By systematically mapping GWAS variants to their target genes, we come closer and closer to building a future in which our genomes inform our respective personalized healthcare.
+
+![DisCO-VG overview](https://github.com/sartorlab/DisCO.VG/blob/main/fig/DisCO-VG_overview.png?raw=true)
 
 **Inputs:** *GWAS variants*, *ATAC-Seq* for cell type or tissue of interest (bulk or single cell), and *eQTL* data for cell type or tissue of interest (bulk or single cell).
 
