@@ -3,7 +3,7 @@
 Integrative tool to predict genetic variant-target gene links in a specific disease and cell type/tissue.
 
 NOTE: 
-- The first release is pending minor adjustment to features.
+- The first release is pending final adjustments to features.
 - This repository contains as yet unpublished work.
 
 ## Description
