@@ -2,10 +2,10 @@
 #'
 #' @description
 #' Aggregate DisCO-VG output scores based on the various times a variant-gene pair was imputed.
-#' For each variant-gene pair, the DisCO-VG output score is a summary statistic
-#' computed from its raw scores from multiple, bagged imputations. This module
-#' also then computes all relevant DisCO-VG scores -- input, output, and average
-#' between input and output.
+#' For each variant-gene pair, the DisCO-VG score is a summary statistic
+#' computed from either its raw input, output, and average between input and output scores
+#' from multiple, bagged imputations. In the original study, avg(in, out) scores
+#' are used as final DisCO-VG scores, reflecting data fusion from both input and output.
 #'
 #' @importFrom dplyr left_join join_by rename starts_with summarize
 #' @importFrom tidyr pivot_longer pivot_wider
@@ -19,9 +19,9 @@ NULL
 #' @param df_raw merged dataframe of repredicted scores (multiple scores per variant-gene pair
 #' @param variants dataframe of variants used in model construction, with at minimum columns `SNP` and `label`
 #' @param output_type specifies the summary statistic used as output score; currently only accepts max score or 90th percentile of scores for a given variant-gene pair.
-#' @return dataframe of DisCO-VG input and output scores where each row is a unique variant-gene pair
+#' @return dataframe of DisCO-VG input, output, and avg(in, out) scores where each group of 3 rows is a unique variant-gene pair
 #' @export
-process_output_score <- function(df_raw, variants, output_type = c("max", "overallTop10perc")) {
+process_output_score <- function(df_raw, variants, output_type = c("max", "90thPerc")) {
   # Validate output_type
   output_type = match.arg(output_type)
 
@@ -35,10 +35,12 @@ process_output_score <- function(df_raw, variants, output_type = c("max", "overa
                              variants[, c("SNP", "label")],
                              by = dplyr::join_by(variant == SNP))
 
+  df_raw$avg_in_out_score = (df_raw$input_score + df_raw$output_score) / 2
+
   if (output_type == "max") {
     df_output = compute_max_score(df_raw)
-  } else if (output_type == "overallTop10perc") {
-    df_output = compute_Top10perc(df_raw)
+  } else if (output_type == "90thPerc") {
+    df_output = compute_90thPerc(df_raw)
   }
 
   return(df_output)
@@ -61,15 +63,15 @@ process_output_score <- function(df_raw, variants, output_type = c("max", "overa
 DisCO.VG_scores <- function(df_output) {
   stopifnot(is.data.frame(df_output),
             all(c("variant", "gene", "label", "scoreType") %in% colnames(df_output)),
-            any(startsWith(colnames(df_output), "DisCOVGscore")))
+            any(startsWith(colnames(df_output), "DisCO.VG_score")))
 
   df_final = tidyr::pivot_wider(df_output,
                                 names_from = scoreType,
                                 names_prefix = "DisCO.VG.",
-                                values_from = dplyr::starts_with("DisCOVGscore"))
+                                values_from = dplyr::starts_with("DisCO.VG_score"))
 
-  df_final$DisCO.VG.avg_in_out = (df_final$DisCO.VG.input + df_final$DisCO.VG.output) / 2
-
+  # Order by DisCO.VG.avg_in_out
+  df_final = df_final[order(df_final$DisCO.VG.avg_in_out, decreasing = TRUE),]
   return(dplyr::rename(df_final, GWAS_label = label))
 }
 
@@ -79,13 +81,13 @@ DisCO.VG_scores <- function(df_output) {
 #' @return dataframe where each row is a unique variant-gene pair with 90th percentile output score
 compute_max_score <- function(df_raw.labeled) {
   df = tidyr::pivot_longer(df_raw.labeled,
-                           cols = c("input_score","output_score"),
+                           cols = c("input_score", "output_score", "avg_in_out_score"),
                            names_to = "scoreType",
                            names_pattern = "^(.*)_score$",
-                           values_to = "DisCOVGscore")
+                           values_to = "DisCO.VG_score")
 
   df = dplyr::summarize(df,
-                        DisCOVGscore.max = max(DisCOVGscore),
+                        DisCO.VG_score_max = max(DisCO.VG_score),
                         .by = c(variant, label, gene, scoreType))
 
   return(df)
@@ -95,15 +97,15 @@ compute_max_score <- function(df_raw.labeled) {
 #'
 #' @param df_raw.labeled merged dataframe of repredicted scores with label for each variant
 #' @return dataframe where each row is a unique variant-gene pair with 90th percentile output score
-compute_Top10perc <- function(df_raw.labeled) {
+compute_90thPerc <- function(df_raw.labeled) {
   df = tidyr::pivot_longer(df_raw.labeled,
-                           cols = c("input_score","output_score"),
+                           cols = c("input_score", "output_score", "avg_in_out_score"),
                            names_to = "scoreType",
                            names_pattern = "^(.*)_score$",
-                           values_to = "DisCOVGscore")
+                           values_to = "DisCO.VG_score")
 
   df = dplyr::summarize(df,
-                        DisCOVGscore.overallTop10perc = stats::quantile(DisCOVGscore, 0.9),
+                        DisCO.VG_score_90thPerc = stats::quantile(DisCO.VG_score, 0.9),
                         .by = c(variant, label, gene, scoreType))
 
   return(df)

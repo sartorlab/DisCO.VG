@@ -4,11 +4,7 @@
 \alias{process_output_score}
 \title{Process DisCO-VG output score from raw scores}
 \usage{
-process_output_score(
-  df_raw,
-  variants,
-  output_type = c("max", "overallTop10perc")
-)
+process_output_score(df_raw, variants, output_type = c("max", "90thPerc"))
 }
 \arguments{
 \item{df_raw}{merged dataframe of repredicted scores (multiple scores per variant-gene pair}
@@ -18,7 +14,7 @@ process_output_score(
 \item{output_type}{specifies the summary statistic used as output score; currently only accepts max score or 90th percentile of scores for a given variant-gene pair.}
 }
 \value{
-dataframe of DisCO-VG input and output scores where each row is a unique variant-gene pair
+dataframe of DisCO-VG input, output, and avg(in, out) scores where each group of 3 rows is a unique variant-gene pair
 }
 \description{
 Process DisCO-VG output score from raw scores

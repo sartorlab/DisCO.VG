@@ -5,8 +5,8 @@
 \title{Process raw DisCO-VG output scores}
 \description{
 Aggregate DisCO-VG output scores based on the various times a variant-gene pair was imputed.
-For each variant-gene pair, the DisCO-VG output score is a summary statistic
-computed from its raw scores from multiple, bagged imputations. This module
-also then computes all relevant DisCO-VG scores -- input, output, and average
-between input and output.
+For each variant-gene pair, the DisCO-VG score is a summary statistic
+computed from either its raw input, output, and average between input and output scores
+from multiple, bagged imputations. In the original study, avg(in, out) scores
+are used as final DisCO-VG scores, reflecting data fusion from both input and output.
 }
