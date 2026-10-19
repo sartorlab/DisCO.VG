@@ -35,6 +35,13 @@ process_output_score <- function(df_raw, variants, output_type = c("max", "90thP
                              variants[, c("SNP", "label")],
                              by = dplyr::join_by(variant == SNP))
 
+  # Clamp output scores between 0-1
+  df_raw$output_score = ifelse(df_raw$output_score < 0,
+                               0,
+                               ifelse(df_raw$output_score > 1,
+                                      1,
+                                      df_raw$output_score))
+
   df_raw$avg_in_out_score = (df_raw$input_score + df_raw$output_score) / 2
 
   if (output_type == "max") {
